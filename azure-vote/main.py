@@ -22,42 +22,43 @@ from opencensus.ext.azure.trace_exporter import AzureExporter
 from opencensus.trace.samplers import ProbabilitySampler
 from opencensus.trace.tracer import Tracer
 from opencensus.ext.flask.flask_middleware import FlaskMiddleware
-# For metrics
+
+app = Flask(__name__)
+
 stats = stats_module.stats
 view_manager = stats.view_manager
 
-# Logging
 config_integration.trace_integrations(['logging'])
 config_integration.trace_integrations(['requests'])
-# Standard Logging
-logger = logging.getLogger(__name__)
-handler = AzureLogHandler(connection_string='InstrumentationKey=c21511ab-5794-4c2c-bdb3-d23be6d3fda5-FaruqUdacityProj04Re-WEU')
-handler.setFormatter(logging.Formatter('%(traceId)s %(spanId)s %(message)s'))
-logger.addHandler(handler)
-# Logging custom Events 
-logger.addHandler(AzureEventHandler(connection_string='InstrumentationKey=c21511ab-5794-4c2c-bdb3-d23be6d3fda5-FaruqUdacityProj04Re-WEU'))
-# Set the logging level
-logger.setLevel(logging.INFO)
-
-# Metrics
-exporter = metrics_exporter.new_metrics_exporter(
-  enable_standard_metrics=True,
-  connection_string='InstrumentationKey=c21511ab-5794-4c2c-bdb3-d23be6d3fda5-FaruqUdacityProj04Re-WEU')
-view_manager.register_exporter(exporter)
-
-# Tracing
-tracer = Tracer(
-    exporter=AzureExporter(
-        connection_string='InstrumentationKey=c21511ab-5794-4c2c-bdb3-d23be6d3fda5-FaruqUdacityProj04Re-WEU'),
-    sampler=ProbabilitySampler(1.0),
-)
-app = Flask(__name__)
 
 # Requests
 middleware = FlaskMiddleware(
     app,
-    exporter=AzureExporter(connection_string="InstrumentationKey=c21511ab-5794-4c2c-bdb3-d23be6d3fda5-FaruqUdacityProj04Re-WEU"),
-    sampler=ProbabilitySampler(rate=1.0)
+    exporter=AzureExporter(connection_string='InstrumentationKey=876e6b92-eed9-4282-af35-d9fe61f41377'),
+    sampler=ProbabilitySampler(rate=1.0),
+)
+# TODO: Setup flask middleware
+
+# Logging
+logger = logging.getLogger(__name__)
+handler = AzureLogHandler(connection_string='InstrumentationKey=876e6b92-eed9-4282-af35-d9fe61f41377')
+handler.setFormatter(logging.Formatter('%(traceId)s %(spanId)s %(message)s'))
+logger.addHandler(handler)
+logger.addHandler(AzureEventHandler(connection_string='InstrumentationKey=876e6b92-eed9-4282-af35-d9fe61f41377'))
+logger.setLevel(logging.INFO)
+
+# Metrics TODO: Setup exporter
+exporter = metrics_exporter.new_metrics_exporter(
+    enable_standard_metrics=True,
+    connection_string='InstrumentationKey=876e6b92-eed9-4282-af35-d9fe61f41377'
+)
+view_manager.register_exporter(exporter)
+
+# Tracing
+tracer = Tracer(
+    exporter = AzureExporter(
+        connection_string = 'InstrumentationKey=876e6b92-eed9-4282-af35-d9fe61f41377'),
+    sampler = ProbabilitySampler(1.0),
 )
 
 # Load configurations from environment or config file
@@ -148,7 +149,7 @@ def index():
             return render_template("index.html", value1=int(vote1), value2=int(vote2), button1=button1, button2=button2, title=title)
 
 if __name__ == "__main__":
-    # TODO: Use the statement below when running locally
-    #app.run() 
-    # TODO: Use the statement below before deployment to VMSS
+    # comment line below when deploying to VMSS
+    #app.run() # local
+    # uncomment the line below before deployment to VMSS
     app.run(host='0.0.0.0', threaded=True, debug=True) # remote
